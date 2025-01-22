@@ -40,6 +40,7 @@ class Main(QMainWindow):
     def start(self):
         self.hide()
         start_game()
+        sys.exit()
 
 
 def terminate():
