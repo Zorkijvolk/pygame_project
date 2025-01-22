@@ -1,6 +1,45 @@
 import os
 import sys
 import pygame
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
+from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
+
+
+class Main(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        font = QFont()
+        font.setFamily("Comic Sans MS")
+
+        self.setGeometry(0, 0, 2000, 1000)
+        self.setFixedSize(2000, 1000)
+        self.setStyleSheet('background-color: {}'.format('#000'))
+        self.aviationButton = QPushButton('start', self)
+        self.aviationButton.resize(500, 100)
+        self.aviationButton.move(500, 400)
+        self.aviationButton.setStyleSheet('''font-size: 20pt;
+               background-color: red;''')
+        self.armyButton = QPushButton(self)
+        self.armyButton.setStyleSheet("background-color: {}".format('#e30b0b'))
+        self.armyButton.move(500, 550)
+        self.armyButton.resize(500, 100)
+        self.aviationButton.clicked.connect(self.start)
+        self.armyButton.setFont(font)
+        self.aviationButton.setFont(font)
+        self.nameProject = QLabel('               THE MAZE', self)
+        self.nameProject.resize(2000, 100)
+        self.nameProject.move(0, 20)
+        self.nameProject.setStyleSheet('''font-size: 80pt;
+               background-color: red;''')
+        self.nameProject.setFont(font)
+
+    def start(self):
+        self.hide()
+        start_game()
 
 
 def terminate():
@@ -114,7 +153,30 @@ class SecondPlayerBoard(Player):
         pass
 
 
+width, height, player, player_image, tile_images, tile_width, tile_height = None, None, None, None, None, None, None
+
+
 def start_game():
+    global width, height, player, player_image, tile_images, tile_width, tile_height
+    pygame.init()
+    size = width, height = 3000, 1000
+    screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+    player = None
+    player_image = load_image('mar.png')
+    tile_images = {
+        'wall': load_image('box.png'),
+        'empty': load_image('grass.png')}
+
+    tile_width = tile_height = 50
+
+    clock = pygame.time.Clock()
+    FPS = 50
+    screen.fill('black')
+    pygame.display.set_caption('Игрушка')
+
+    first_player = generate_level(load_level('first_level_0_0.txt'), 1, 200, 100)
+    second_player = generate_level(load_level('first_level_0_1.txt'), 2, 1150, 100)
+
     running = True
 
     while running:
@@ -145,25 +207,8 @@ def start_game():
     pygame.quit()
 
 
-pygame.init()
-size = width, height = 2000, 1000
-screen = pygame.display.set_mode(size)
-screen.fill('black')
-pygame.display.set_caption('Игрушка')
-
-game_started = 1
-player = None
-player_image = load_image('mar.png')
-tile_images = {
-    'wall': load_image('box.png'),
-    'empty': load_image('grass.png')}
-
-tile_width = tile_height = 50
-
-clock = pygame.time.Clock()
-FPS = 50
-
-first_player = generate_level(load_level('first_level_0_0.txt'), 1, 200, 100)
-second_player = generate_level(load_level('first_level_0_1.txt'), 2, 1150, 100)
-
-start_game()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    n = Main()
+    n.showFullScreen()
+    sys.exit(app.exec())
