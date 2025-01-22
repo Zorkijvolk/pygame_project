@@ -8,6 +8,12 @@ def terminate():
     sys.exit()
 
 
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+box_group = pygame.sprite.Group()
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -41,7 +47,8 @@ def generate_level(level, n_player, m_x=0, m_y=0):
             if level[y][x] == '.':
                 Tile('empty', x, y, m_x, m_y)
             elif level[y][x] == '#':
-                Tile('wall', x, y, m_x, m_y)
+                Box('wall', x, y, m_x, m_y)
+            #                Tile('wall', x, y, m_x, m_y)
             elif level[y][x] == '@':
                 Tile('empty', x, y, m_x, m_y)
                 if n_player == 1:
@@ -59,6 +66,14 @@ class Tile(pygame.sprite.Sprite):
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
+class Box(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
+        super().__init__(box_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x + move_x, tile_height * pos_y + move_y)
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, move_x, move_y):
         super().__init__(player_group, all_sprites)
@@ -66,11 +81,25 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15 + move_x, tile_height * pos_y + 5 + move_y)
 
-    def update(self, x, y):
-        x = tile_width * x
-        y = tile_height * y
-        self.rect.x += x
-        self.rect.y += y
+    def move_l(self):
+        self.rect.x -= 50
+        if pygame.sprite.spritecollideany(self, box_group):
+            self.rect.x += 50
+
+    def move_r(self):
+        self.rect.x += 50
+        if pygame.sprite.spritecollideany(self, box_group):
+            self.rect.x -= 50
+
+    def move_up(self):
+        self.rect.y -= 50
+        if pygame.sprite.spritecollideany(self, box_group):
+            self.rect.y += 50
+
+    def move_down(self):
+        self.rect.y += 50
+        if pygame.sprite.spritecollideany(self, box_group):
+            self.rect.y -= 50
 
 
 class FirstPlayerBoard(Player):
@@ -85,18 +114,45 @@ class SecondPlayerBoard(Player):
         pass
 
 
+def start_game():
+    running = True
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if pygame.key.get_pressed()[pygame.K_LEFT]:
+                    second_player.move_l()
+                if pygame.key.get_pressed()[pygame.K_DOWN]:
+                    second_player.move_down()
+                if pygame.key.get_pressed()[pygame.K_UP]:
+                    second_player.move_up()
+                if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                    second_player.move_r()
+                if pygame.key.get_pressed()[pygame.K_w]:
+                    first_player.move_up()
+                if pygame.key.get_pressed()[pygame.K_a]:
+                    first_player.move_l()
+                if pygame.key.get_pressed()[pygame.K_s]:
+                    first_player.move_down()
+                if pygame.key.get_pressed()[pygame.K_d]:
+                    first_player.move_r()
+        all_sprites.draw(screen)
+        player_group.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.quit()
+
+
 pygame.init()
-size = width, height = 2100, 1000
+size = width, height = 2000, 1000
 screen = pygame.display.set_mode(size)
 screen.fill('black')
 pygame.display.set_caption('Игрушка')
 
 game_started = 1
 player = None
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-
 player_image = load_image('mar.png')
 tile_images = {
     'wall': load_image('box.png'),
@@ -110,11 +166,4 @@ FPS = 50
 first_player = generate_level(load_level('first_level_0_0.txt'), 1, 200, 100)
 second_player = generate_level(load_level('first_level_0_1.txt'), 2, 1150, 100)
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            terminate()
-    tiles_group.draw(screen)
-    player_group.draw(screen)
-    pygame.display.flip()
-    clock.tick(FPS)
+start_game()
