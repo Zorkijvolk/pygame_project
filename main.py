@@ -2,7 +2,7 @@ import os
 import sys
 import pygame
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
 
 
@@ -15,26 +15,55 @@ class Main(QMainWindow):
         font = QFont()
         font.setFamily("Comic Sans MS")
 
-        self.setGeometry(0, 0, 2000, 1000)
-        self.setFixedSize(2000, 1000)
-        self.setStyleSheet('background-color: {}'.format('#000'))
-        self.aviationButton = QPushButton('start', self)
-        self.aviationButton.resize(500, 100)
-        self.aviationButton.move(500, 400)
-        self.aviationButton.setStyleSheet('''font-size: 20pt;
-               background-color: red;''')
-        self.armyButton = QPushButton(self)
-        self.armyButton.setStyleSheet("background-color: {}".format('#e30b0b'))
-        self.armyButton.move(500, 550)
-        self.armyButton.resize(500, 100)
-        self.aviationButton.clicked.connect(self.start)
-        self.armyButton.setFont(font)
-        self.aviationButton.setFont(font)
+        button_size = (500, 150)
+        screen_w, screen_h = self.screen().size().width(), self.screen().size().height()
+
+        self.pixmap = QPixmap('data/космос.png')
+        self.pixmap = self.pixmap.scaled(screen_w, screen_h,
+                                         aspectRatioMode=Qt.AspectRatioMode.IgnoreAspectRatio)
+        self.background = QLabel(self)
+        self.background.setGeometry(0, 0, screen_w, screen_h)
+        self.background.setPixmap(self.pixmap)
+        self.startButton = QPushButton('start', self)
+        self.startButton.resize(button_size[0], button_size[1])
+        self.startButton.move((screen_w - button_size[0]) // 2, 250)
+        self.startButton.setStyleSheet('''font-size: 20pt;
+               background-color: blue;''')
+
+        self.exitButton = QPushButton('exit', self)
+        self.exitButton.setStyleSheet('''font-size: 20pt;
+               background-color: blue;''')
+        self.exitButton.move((screen_w - button_size[0]) // 2, 650)
+        self.exitButton.resize(button_size[0], button_size[1])
+        self.exitButton.setFont(font)
+
+        self.settingsButton = QPushButton('settings', self)
+        self.settingsButton.setStyleSheet('''font-size: 20pt;
+               background-color: blue;''')
+        self.settingsButton.move((screen_w - button_size[0]) // 2, 450)
+        self.settingsButton.resize(button_size[0], button_size[1])
+        self.exitButton.setFont(font)
+
+        self.backButton = QPushButton('back', self)
+        self.backButton.setStyleSheet('''font-size: 20pt;
+               background-color: blue;''')
+        self.backButton.resize(100, 100)
+        self.backButton.move(10, 10)
+        self.backButton.setFont(font)
+        self.backButton.hide()
+
+        self.startButton.setFont(font)
+
+        self.startButton.clicked.connect(self.start)
+        self.exitButton.clicked.connect(lambda x: self.close())
+        self.settingsButton.clicked.connect(self.settings)
+        self.backButton.clicked.connect(self.first_page)
+
         self.nameProject = QLabel('               THE MAZE', self)
-        self.nameProject.resize(2000, 100)
-        self.nameProject.move(0, 20)
+        self.nameProject.resize(self.screen().size().width(), 200)
+        self.nameProject.move(0, 0)
         self.nameProject.setStyleSheet('''font-size: 80pt;
-               background-color: red;''')
+               background-color: blue;''')
         self.nameProject.setFont(font)
 
     def start(self):
@@ -42,10 +71,19 @@ class Main(QMainWindow):
         start_game()
         sys.exit()
 
+    def settings(self):
+        self.startButton.hide()
+        self.exitButton.hide()
+        self.nameProject.hide()
+        self.settingsButton.hide()
+        self.backButton.show()
 
-def terminate():
-    pygame.quit()
-    sys.exit()
+    def first_page(self):
+        self.startButton.show()
+        self.exitButton.show()
+        self.nameProject.show()
+        self.settingsButton.show()
+        self.backButton.hide()
 
 
 all_sprites = pygame.sprite.Group()
@@ -88,7 +126,6 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                 Tile('empty', x, y, m_x, m_y)
             elif level[y][x] == '#':
                 Box('wall', x, y, m_x, m_y)
-            #                Tile('wall', x, y, m_x, m_y)
             elif level[y][x] == '@':
                 Tile('empty', x, y, m_x, m_y)
                 if n_player == 1:
@@ -117,29 +154,38 @@ class Box(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, move_x, move_y):
         super().__init__(player_group, all_sprites)
-        self.image = player_image
+        self.frames = [player_image, player_animation]
+        self.cur_image = 0
+        self.image = self.frames[self.cur_image]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15 + move_x, tile_height * pos_y + 5 + move_y)
 
-    def move_l(self):
-        self.rect.x -= 50
-        if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x += 50
+    def update(self):
+        if self.cur_image:
+            self.cur_image = 0
+        else:
+            self.cur_image = 1
+        self.image = self.frames[self.cur_image]
 
-    def move_r(self):
-        self.rect.x += 50
+    def move_l(self, m):
+        self.rect.x -= m
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x -= 50
+            self.rect.x += m
 
-    def move_up(self):
-        self.rect.y -= 50
+    def move_r(self, m):
+        self.rect.x += m
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y += 50
+            self.rect.x -= m
 
-    def move_down(self):
-        self.rect.y += 50
+    def move_up(self, m):
+        self.rect.y -= m
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y -= 50
+            self.rect.y += m
+
+    def move_down(self, m):
+        self.rect.y += m
+        if pygame.sprite.spritecollideany(self, box_group):
+            self.rect.y -= m
 
 
 class FirstPlayerBoard(Player):
@@ -155,52 +201,66 @@ class SecondPlayerBoard(Player):
 
 
 width, height, player, player_image, tile_images, tile_width, tile_height = None, None, None, None, None, None, None
+player_animation = None
 
 
 def start_game():
-    global width, height, player, player_image, tile_images, tile_width, tile_height
+    global width, height, player, player_image, tile_images, tile_width, tile_height, player_animation
     pygame.init()
-    size = width, height = 3000, 1000
+
+    size = width, height = pygame.display.Info().current_w, pygame.display.Info().current_h
     screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
     player = None
-    player_image = load_image('mar.png')
+    player_image = load_image('player.png')
+    player_animation = load_image('player2.png')
     tile_images = {
-        'wall': load_image('box.png'),
-        'empty': load_image('grass.png')}
+        'wall': load_image('brick.png'),
+        'empty': load_image('path.png')}
+#        'key1': load_image(),
+#        'key2': load_image()}
 
-    tile_width = tile_height = 50
+    tile_width = tile_height = 70
 
     clock = pygame.time.Clock()
     FPS = 50
     screen.fill('black')
-    pygame.display.set_caption('Игрушка')
+    pygame.display.set_caption('THE MAZE')
 
-    first_player = generate_level(load_level('first_level_0_0.txt'), 1, 200, 100)
-    second_player = generate_level(load_level('first_level_0_1.txt'), 2, 1150, 100)
+    first_player = generate_level(load_level('first_level_0_0.txt'), 1,
+                                  (width - 2100) // 3, (height - 1050) // 2)
+    second_player = generate_level(load_level('first_level_0_1.txt'), 2,
+                                   2 * ((width - 2100) // 3) + 1050, (height - 1050) // 2)
 
     running = True
+    t = 0
 
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if pygame.key.get_pressed()[pygame.K_LEFT]:
-                    second_player.move_l()
+                    second_player.move_l(70)
                 if pygame.key.get_pressed()[pygame.K_DOWN]:
-                    second_player.move_down()
+                    second_player.move_down(70)
                 if pygame.key.get_pressed()[pygame.K_UP]:
-                    second_player.move_up()
+                    second_player.move_up(70)
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                    second_player.move_r()
+                    second_player.move_r(70)
                 if pygame.key.get_pressed()[pygame.K_w]:
-                    first_player.move_up()
+                    first_player.move_up(70)
                 if pygame.key.get_pressed()[pygame.K_a]:
-                    first_player.move_l()
+                    first_player.move_l(70)
                 if pygame.key.get_pressed()[pygame.K_s]:
-                    first_player.move_down()
+                    first_player.move_down(70)
                 if pygame.key.get_pressed()[pygame.K_d]:
-                    first_player.move_r()
+                    first_player.move_r(70)
+        if t == 4:
+            t = 0
+            first_player.update()
+            second_player.update()
+        else:
+            t += 1
         all_sprites.draw(screen)
         player_group.draw(screen)
         pygame.display.flip()
