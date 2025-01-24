@@ -9,9 +9,7 @@ from PyQt6.QtCore import Qt
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.initUI()
 
-    def initUI(self):
         font = QFont()
         font.setFamily("Comic Sans MS")
 
@@ -24,35 +22,31 @@ class Main(QMainWindow):
         self.background = QLabel(self)
         self.background.setGeometry(0, 0, screen_w, screen_h)
         self.background.setPixmap(self.pixmap)
+
         self.startButton = QPushButton('start', self)
         self.startButton.resize(button_size[0], button_size[1])
-        self.startButton.move((screen_w - button_size[0]) // 2, 250)
-        self.startButton.setStyleSheet('''font-size: 20pt;
-               background-color: blue;''')
+        self.startButton.move((screen_w - button_size[0]) // 2, 550)
+        self.startButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
+        self.startButton.setFont(font)
+
+        self.settingsButton = QPushButton('settings', self)
+        self.settingsButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
+        self.settingsButton.move((screen_w - button_size[0]) // 2, 750)
+        self.settingsButton.resize(button_size[0], button_size[1])
+        self.settingsButton.setFont(font)
 
         self.exitButton = QPushButton('exit', self)
-        self.exitButton.setStyleSheet('''font-size: 20pt;
-               background-color: blue;''')
-        self.exitButton.move((screen_w - button_size[0]) // 2, 650)
+        self.exitButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
+        self.exitButton.move((screen_w - button_size[0]) // 2, 950)
         self.exitButton.resize(button_size[0], button_size[1])
         self.exitButton.setFont(font)
 
-        self.settingsButton = QPushButton('settings', self)
-        self.settingsButton.setStyleSheet('''font-size: 20pt;
-               background-color: blue;''')
-        self.settingsButton.move((screen_w - button_size[0]) // 2, 450)
-        self.settingsButton.resize(button_size[0], button_size[1])
-        self.exitButton.setFont(font)
-
         self.backButton = QPushButton('back', self)
-        self.backButton.setStyleSheet('''font-size: 20pt;
-               background-color: blue;''')
+        self.backButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
         self.backButton.resize(100, 100)
         self.backButton.move(10, 10)
         self.backButton.setFont(font)
         self.backButton.hide()
-
-        self.startButton.setFont(font)
 
         self.startButton.clicked.connect(self.start)
         self.exitButton.clicked.connect(lambda x: self.close())
@@ -85,13 +79,6 @@ class Main(QMainWindow):
         self.nameProject.show()
         self.settingsButton.show()
         self.backButton.hide()
-
-
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-box_group = pygame.sprite.Group()
-door_group = pygame.sprite.Group()
 
 
 def load_image(name, colorkey=None):
@@ -134,9 +121,16 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                     new_player = FirstPlayerBoard(x, y, m_x, m_y)
                 else:
                     new_player = SecondPlayerBoard(x, y, m_x, m_y)
-            elif level[y][x] == '0':
-                Door('open_door', x, y, m_x, m_y)
+            # elif level[y][x] == '0':
+            #     Door('open_door', x, y, m_x, m_y)
     return new_player
+
+
+class Border(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h):
+        super().__init__(all_sprites, borders)
+        self.rect = pygame.Rect(x, y, w, h)
+        self.image = pygame.Surface([w, h])
 
 
 class Tile(pygame.sprite.Sprite):
@@ -172,24 +166,40 @@ class Player(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_image]
 
     def move_l(self, m):
-        self.rect.x -= m
+        self.rect.x -= m // 2
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x += m
+            self.rect.x += m // 2
+        elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.x += m // 2
+        else:
+            self.rect.x -= m // 2
 
     def move_r(self, m):
-        self.rect.x += m
+        self.rect.x += m // 2
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x -= m
+            self.rect.x -= m // 2
+        elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.x -= m // 2
+        else:
+            self.rect.x += m // 2
 
     def move_up(self, m):
-        self.rect.y -= m
+        self.rect.y -= m // 2
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y += m
+            self.rect.y += m // 2
+        elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.y += m // 2
+        else:
+            self.rect.y -= m // 2
 
     def move_down(self, m):
-        self.rect.y += m
+        self.rect.y += m // 2
         if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y -= m
+            self.rect.y -= m // 2
+        elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.y -= m // 2
+        else:
+            self.rect.y += m // 2
 
 
 class FirstPlayerBoard(Player):
@@ -206,6 +216,12 @@ class SecondPlayerBoard(Player):
 
 width, height, player, player_image, tile_images, tile_width, tile_height = None, None, None, None, None, None, None
 player_animation = None
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+box_group = pygame.sprite.Group()
+door_group = pygame.sprite.Group()
+borders = pygame.sprite.Group()
 
 
 def start_game():
@@ -215,26 +231,44 @@ def start_game():
     size = width, height = pygame.display.Info().current_w, pygame.display.Info().current_h
     screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
     player = None
-    player_image = load_image('player.png')
-    player_animation = load_image('player2.png')
+    player_image = load_image('player.png', -1)
+    player_animation = load_image('player2.png', -1)
     tile_images = {
         'wall': load_image('brick.png'),
         'empty': load_image('path.png'),
         'open_door': load_image('door_opened.png')}
-#        'key1': load_image(),
-#        'key2': load_image()}
+    #        'key1': load_image(),
+    #        'key2': load_image()}
 
-    tile_width = tile_height = 70
+    tile_width = tile_height = 50
+    tile_count_w = 15
+    tile_count_h = 15
+    gaming_pole_width = tile_width * tile_count_w
+    gaming_pole_height = tile_height * tile_count_h
 
     clock = pygame.time.Clock()
     FPS = 50
     screen.fill('black')
     pygame.display.set_caption('THE MAZE')
 
+    left_x = (width - gaming_pole_width * 2) // 3 - 1
+    right_x = 2 * left_x + gaming_pole_width - 1
+    everyone_y = (height - gaming_pole_height) // 2 - 1
+
+    Border(left_x, everyone_y, gaming_pole_width + 1, 1)
+    Border(left_x, everyone_y + gaming_pole_height, gaming_pole_width + 1, 1)
+    Border(left_x, everyone_y, 1, gaming_pole_height + 1)
+    Border(left_x + gaming_pole_width, everyone_y, 1, gaming_pole_height + 1)
+
+    Border(right_x, everyone_y, gaming_pole_width + 1, 1)
+    Border(right_x, everyone_y + gaming_pole_height, gaming_pole_width + 1, 1)
+    Border(right_x, everyone_y, 1, gaming_pole_height + 1)
+    Border(right_x + gaming_pole_width, everyone_y, 1, gaming_pole_height + 1)
+
     first_player = generate_level(load_level('first_level_0_0.txt'), 1,
-                                  (width - 2100) // 3, (height - 1050) // 2)
+                                  left_x + 1, everyone_y + 1)
     second_player = generate_level(load_level('first_level_0_1.txt'), 2,
-                                   2 * ((width - 2100) // 3) + 1050, (height - 1050) // 2)
+                                   right_x + 1, everyone_y + 1)
 
     running = True
     t = 0
@@ -245,29 +279,28 @@ def start_game():
                 running = False
             if event.type == pygame.KEYDOWN:
                 if pygame.key.get_pressed()[pygame.K_LEFT]:
-                    second_player.move_l(70)
+                    second_player.move_l(50)
                 if pygame.key.get_pressed()[pygame.K_DOWN]:
-                    second_player.move_down(70)
+                    second_player.move_down(50)
                 if pygame.key.get_pressed()[pygame.K_UP]:
-                    second_player.move_up(70)
+                    second_player.move_up(50)
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                    second_player.move_r(70)
+                    second_player.move_r(50)
                 if pygame.key.get_pressed()[pygame.K_w]:
-                    first_player.move_up(70)
+                    first_player.move_up(50)
                 if pygame.key.get_pressed()[pygame.K_a]:
-                    first_player.move_l(70)
+                    first_player.move_l(50)
                 if pygame.key.get_pressed()[pygame.K_s]:
-                    first_player.move_down(70)
+                    first_player.move_down(50)
                 if pygame.key.get_pressed()[pygame.K_d]:
-                    first_player.move_r(70)
-        if t == 4:
-            t = 0
+                    first_player.move_r(50)
+        t = (t + 1) % 4
+        if t == 0:
             first_player.update()
             second_player.update()
-        else:
-            t += 1
         all_sprites.draw(screen)
         player_group.draw(screen)
+        borders.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
