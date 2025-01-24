@@ -59,12 +59,13 @@ class Main(QMainWindow):
         self.settingsButton.clicked.connect(self.settings)
         self.backButton.clicked.connect(self.first_page)
 
-        self.nameProject = QLabel('               THE MAZE', self)
+        self.nameProject = QLabel('THE MAZE', self)
         self.nameProject.resize(self.screen().size().width(), 200)
         self.nameProject.move(0, 0)
         self.nameProject.setStyleSheet('''font-size: 80pt;
                background-color: blue;''')
         self.nameProject.setFont(font)
+        self.nameProject.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def start(self):
         self.hide()
@@ -90,6 +91,7 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 box_group = pygame.sprite.Group()
+door_group = pygame.sprite.Group()
 
 
 def load_image(name, colorkey=None):
@@ -132,6 +134,8 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                     new_player = FirstPlayerBoard(x, y, m_x, m_y)
                 else:
                     new_player = SecondPlayerBoard(x, y, m_x, m_y)
+            elif level[y][x] == '0':
+                Door('open_door', x, y, m_x, m_y)
     return new_player
 
 
@@ -215,7 +219,8 @@ def start_game():
     player_animation = load_image('player2.png')
     tile_images = {
         'wall': load_image('brick.png'),
-        'empty': load_image('path.png')}
+        'empty': load_image('path.png'),
+        'open_door': load_image('door_opened.png')}
 #        'key1': load_image(),
 #        'key2': load_image()}
 
