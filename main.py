@@ -121,8 +121,8 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                     new_player = FirstPlayerBoard(x, y, m_x, m_y)
                 else:
                     new_player = SecondPlayerBoard(x, y, m_x, m_y)
-            # elif level[y][x] == '0':
-            #     Door('open_door', x, y, m_x, m_y)
+            elif level[y][x] == '0':
+                Door('open_door', x, y, m_x, m_y)
     return new_player
 
 
@@ -131,6 +131,14 @@ class Border(pygame.sprite.Sprite):
         super().__init__(all_sprites, borders)
         self.rect = pygame.Rect(x, y, w, h)
         self.image = pygame.Surface([w, h])
+
+
+class Door(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
+        super().__init__(door_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
 class Tile(pygame.sprite.Sprite):
