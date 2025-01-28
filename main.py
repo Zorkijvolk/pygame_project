@@ -122,7 +122,7 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                 else:
                     new_player = SecondPlayerBoard(x, y, m_x, m_y)
             elif level[y][x] == '0':
-                Door('open_door', x, y, m_x, m_y)
+                Door('open_door', x, y, m_x, m_y, 0)
     return new_player
 
 
@@ -134,11 +134,15 @@ class Border(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y, type1):
         super().__init__(door_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
+        self.type = type1
+
+    def type(self):
+        return self.type
 
 
 class Tile(pygame.sprite.Sprite):
@@ -174,19 +178,23 @@ class Player(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_image]
 
     def move_l(self, m):
+    self.rect.x -= m // 2
+    if pygame.sprite.spritecollideany(self, box_group):
+        self.rect.x += m // 2
+    elif pygame.sprite.spritecollideany(self, borders):
+        self.rect.x += m // 2
+    elif pygame.sprite.spritecollideany(self, door_group):
+        self.rect.x += m // 2
+    else:
         self.rect.x -= m // 2
-        if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x += m // 2
-        elif pygame.sprite.spritecollideany(self, borders):
-            self.rect.x += m // 2
-        else:
-            self.rect.x -= m // 2
 
     def move_r(self, m):
         self.rect.x += m // 2
         if pygame.sprite.spritecollideany(self, box_group):
             self.rect.x -= m // 2
         elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.x -= m // 2
+        elif pygame.sprite.spritecollideany(self, door_group):
             self.rect.x -= m // 2
         else:
             self.rect.x += m // 2
@@ -197,6 +205,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += m // 2
         elif pygame.sprite.spritecollideany(self, borders):
             self.rect.y += m // 2
+        elif pygame.sprite.spritecollideany(self, door_group):
+            self.rect.y += m // 2
         else:
             self.rect.y -= m // 2
 
@@ -205,6 +215,8 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, box_group):
             self.rect.y -= m // 2
         elif pygame.sprite.spritecollideany(self, borders):
+            self.rect.y -= m // 2
+        elif pygame.sprite.spritecollideany(self, door_group):
             self.rect.y -= m // 2
         else:
             self.rect.y += m // 2
