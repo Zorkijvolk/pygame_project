@@ -112,17 +112,32 @@ def generate_level(level, n_player, m_x=0, m_y=0):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
-                Tile('empty', x, y, m_x, m_y)
+                obj = Tile('empty', x, y, m_x, m_y)
             elif level[y][x] == '#':
-                Box('wall', x, y, m_x, m_y)
+                obj = Box('wall', x, y, m_x, m_y)
             elif level[y][x] == '@':
-                Tile('empty', x, y, m_x, m_y)
+                obj = Tile('empty', x, y, m_x, m_y)
                 if n_player == 1:
-                    new_player = FirstPlayerBoard(x, y, m_x, m_y)
+                    new_player = Player(x, y, m_x, m_y, 1)
                 else:
-                    new_player = SecondPlayerBoard(x, y, m_x, m_y)
-            elif level[y][x] == '0':
-                Door('open_door', x, y, m_x, m_y, 0)
+                    new_player = Player(x, y, m_x, m_y, 2)
+            elif level[y][x] == 'e':
+                obj = Door('east_door', x, y, m_x, m_y)
+            elif level[y][x] == 'w':
+                obj = Door('west_door', x, y, m_x, m_y)
+            elif level[y][x] == 's':
+                obj = Door('south_door', x, y, m_x, m_y)
+            elif level[y][x] == 'n':
+                obj = Door('north_door', x, y, m_x, m_y)
+            if isinstance(obj, Box):
+                if n_player == 1:
+                    player1_box_group.add(obj)
+                else:
+                    player2_box_group.add(obj)
+            elif n_player == 1:
+                player1_tiles_group.add(obj)
+            else:
+                player2_tiles_group.add(obj)
     return new_player
 
 
@@ -134,20 +149,17 @@ class Border(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y, type1):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(door_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
-        self.type = type1
-
-    def type(self):
-        return self.type
+        self.type = tile_type
 
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
-        super().__init__(tiles_group, all_sprites)
+        super().__init__(all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
@@ -155,20 +167,26 @@ class Tile(pygame.sprite.Sprite):
 
 class Box(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
-        super().__init__(box_group, all_sprites)
+        super().__init__(all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, move_x, move_y):
-        super().__init__(player_group, all_sprites)
+    def __init__(self, pos_x, pos_y, move_x, move_y, player):
+        super().__init__(all_sprites)
         self.frames = [player_image, player_animation]
         self.cur_image = 0
         self.image = self.frames[self.cur_image]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15 + move_x, tile_height * pos_y + 5 + move_y)
+        self.m_x = move_x
+        self.m_y = move_y
+        if player == 1:
+            self.cur_room = 6
+        else:
+            self.cur_room = 7
 
     def update(self):
         if self.cur_image:
@@ -177,75 +195,148 @@ class Player(pygame.sprite.Sprite):
             self.cur_image = 1
         self.image = self.frames[self.cur_image]
 
-    def move_l(self, m):
-    self.rect.x -= m // 2
-    if pygame.sprite.spritecollideany(self, box_group):
-        self.rect.x += m // 2
-    elif pygame.sprite.spritecollideany(self, borders):
-        self.rect.x += m // 2
-    elif pygame.sprite.spritecollideany(self, door_group):
-        self.rect.x += m // 2
-    else:
+    def move_l(self, m, player_n):
         self.rect.x -= m // 2
+        if player_n == 1:
+            if pygame.sprite.spritecollideany(self, player1_box_group):
+                self.rect.x += m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.x += m // 2
+                player1_tiles_group.empty()
+                player1_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room - 1}.txt'), 1, self.m_x, self.m_y)
+                self.cur_room -= 1
+            else:
+                self.rect.x -= m // 2
+        else:
+            if pygame.sprite.spritecollideany(self, player2_box_group):
+                self.rect.x += m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.x += m // 2
+                player2_tiles_group.empty()
+                player2_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room - 1}.txt'), 2, self.m_x, self.m_y)
+                self.cur_room -= 1
+            else:
+                self.rect.x -= m // 2
 
-    def move_r(self, m):
+    def move_r(self, m, player_n):
         self.rect.x += m // 2
-        if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.x -= m // 2
-        elif pygame.sprite.spritecollideany(self, borders):
-            self.rect.x -= m // 2
-        elif pygame.sprite.spritecollideany(self, door_group):
-            self.rect.x -= m // 2
-        else:
-            self.rect.x += m // 2
+        if player_n == 1:
+            if pygame.sprite.spritecollideany(self, player1_box_group):
+                self.rect.x -= m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.x -= m // 2
+                player1_tiles_group.empty()
+                player1_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room + 1}.txt'), 1, self.m_x, self.m_y)
+                self.cur_room += 1
+            else:
+                self.rect.x += m // 2
 
-    def move_up(self, m):
+        else:
+            if pygame.sprite.spritecollideany(self, player2_box_group):
+                self.rect.x -= m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.x -= m // 2
+                player2_tiles_group.empty()
+                player2_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room + 1}.txt'), 2, self.m_x, self.m_y)
+                self.cur_room += 1
+            else:
+                self.rect.x += m // 2
+
+    def move_up(self, m, player_n):
         self.rect.y -= m // 2
-        if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y += m // 2
-        elif pygame.sprite.spritecollideany(self, borders):
-            self.rect.y += m // 2
-        elif pygame.sprite.spritecollideany(self, door_group):
-            self.rect.y += m // 2
+        if player_n == 1:
+            if pygame.sprite.spritecollideany(self, player1_box_group):
+                self.rect.y += m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.y += m // 2
+                player1_tiles_group.empty()
+                player1_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room - 4}.txt'), 1, self.m_x, self.m_y)
+                self.cur_room -= 4
+            else:
+                self.rect.y -= m // 2
         else:
-            self.rect.y -= m // 2
+            if pygame.sprite.spritecollideany(self, player2_box_group):
+                self.rect.y += m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.y += m // 2
+                player2_tiles_group.empty()
+                player2_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room - 4}.txt'), 2, self.m_x, self.m_y)
+                self.cur_room -= 4
+            else:
+                self.rect.y -= m // 2
 
-    def move_down(self, m):
+    def move_down(self, m, player_n):
         self.rect.y += m // 2
-        if pygame.sprite.spritecollideany(self, box_group):
-            self.rect.y -= m // 2
-        elif pygame.sprite.spritecollideany(self, borders):
-            self.rect.y -= m // 2
-        elif pygame.sprite.spritecollideany(self, door_group):
-            self.rect.y -= m // 2
+        if player_n == 1:
+            if pygame.sprite.spritecollideany(self, player1_box_group):
+                self.rect.y -= m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.y -= m // 2
+                player1_tiles_group.empty()
+                player1_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room + 4}.txt'), 1, self.m_x, self.m_y)
+                self.cur_room += 4
+            else:
+                self.rect.y += m // 2
         else:
-            self.rect.y += m // 2
+            if pygame.sprite.spritecollideany(self, player2_box_group):
+                self.rect.y -= m // 2
+            elif pygame.sprite.spritecollideany(self, borders):
+                self.rect.y -= m // 2
+                player2_tiles_group.empty()
+                player2_box_group.empty()
+                pygame.draw.rect(screen, pygame.Color('black'),
+                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                generate_level(load_level(f'map1.{self.cur_room + 4}.txt'), 2, self.m_x, self.m_y)
+                self.cur_room += 4
+            else:
+                self.rect.y += m // 2
 
 
-class FirstPlayerBoard(Player):
-    def __init__(self, pos_x, pos_y, move_x, move_y):
-        super().__init__(pos_x, pos_y, move_x, move_y)
-        pass
-
-
-class SecondPlayerBoard(Player):
-    def __init__(self, pos_x, pos_y, move_x, move_y):
-        super().__init__(pos_x, pos_y, move_x, move_y)
-        pass
-
-
-width, height, player, player_image, tile_images, tile_width, tile_height = None, None, None, None, None, None, None
+width, height, player, player_image, tile_images, screen = None, None, None, None, None, None
+tile_width = tile_height = 50
+tile_count_w = 15
+tile_count_h = 15
 player_animation = None
+duplicate_for_f_pl = None
+duplicate_for_s_pl = None
 all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-box_group = pygame.sprite.Group()
+
+player1_tiles_group = pygame.sprite.Group()
+player1_box_group = pygame.sprite.Group()
+
+player2_tiles_group = pygame.sprite.Group()
+player2_box_group = pygame.sprite.Group()
+
+f_players_group = pygame.sprite.Group()
+s_players_group = pygame.sprite.Group()
+
 door_group = pygame.sprite.Group()
 borders = pygame.sprite.Group()
 
 
 def start_game():
-    global width, height, player, player_image, tile_images, tile_width, tile_height, player_animation
+    global width, height, player, player_image, tile_images, tile_width, tile_height, player_animation, screen
     pygame.init()
 
     size = width, height = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -256,13 +347,13 @@ def start_game():
     tile_images = {
         'wall': load_image('brick.png'),
         'empty': load_image('path.png'),
-        'open_door': load_image('door_opened.png')}
+        'north_door': load_image('door_opened.png'),
+        'east_door': load_image('door_opened_west.png'),
+        'west_door': load_image('door_opened_east.png'),
+        'south_door': load_image('door_opened_south.png')}
     #        'key1': load_image(),
     #        'key2': load_image()}
 
-    tile_width = tile_height = 50
-    tile_count_w = 15
-    tile_count_h = 15
     gaming_pole_width = tile_width * tile_count_w
     gaming_pole_height = tile_height * tile_count_h
 
@@ -290,6 +381,9 @@ def start_game():
     second_player = generate_level(load_level('first_level_0_1.txt'), 2,
                                    right_x + 1, everyone_y + 1)
 
+    f_players_group.add(first_player)
+    s_players_group.add(second_player)
+
     running = True
     t = 0
 
@@ -298,29 +392,52 @@ def start_game():
             if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if pygame.key.get_pressed()[pygame.K_LEFT]:
-                    second_player.move_l(50)
-                if pygame.key.get_pressed()[pygame.K_DOWN]:
-                    second_player.move_down(50)
-                if pygame.key.get_pressed()[pygame.K_UP]:
-                    second_player.move_up(50)
-                if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                    second_player.move_r(50)
-                if pygame.key.get_pressed()[pygame.K_w]:
-                    first_player.move_up(50)
-                if pygame.key.get_pressed()[pygame.K_a]:
-                    first_player.move_l(50)
-                if pygame.key.get_pressed()[pygame.K_s]:
-                    first_player.move_down(50)
-                if pygame.key.get_pressed()[pygame.K_d]:
-                    first_player.move_r(50)
+                if event.key == pygame.K_w:
+                    first_player.move_up(50, 1)
+                    if duplicate_for_f_pl is not None:
+                        duplicate_for_f_pl.move_up(50, 1)
+                if event.key == pygame.K_a:
+                    first_player.move_l(50, 1)
+                    if duplicate_for_f_pl is not None:
+                        duplicate_for_f_pl.move_l(50, 1)
+                if event.key == pygame.K_s:
+                    first_player.move_down(50, 1)
+                    if duplicate_for_f_pl is not None:
+                        duplicate_for_f_pl.move_down(50, 1)
+                if event.key == pygame.K_d:
+                    first_player.move_r(50, 1)
+                    if duplicate_for_f_pl is not None:
+                        duplicate_for_f_pl.move_r(50, 1)
+                if event.key == pygame.K_LEFT:
+                    second_player.move_l(50, 2)
+                    if duplicate_for_s_pl is not None:
+                        duplicate_for_s_pl.move_l(50, 2)
+                if event.key == pygame.K_DOWN:
+                    second_player.move_down(50, 2)
+                    if duplicate_for_s_pl is not None:
+                        duplicate_for_s_pl.move_down(50, 2)
+                if event.key == pygame.K_UP:
+                    second_player.move_up(50, 2)
+                    if duplicate_for_s_pl is not None:
+                        duplicate_for_s_pl.move_up(50, 2)
+                if event.key == pygame.K_RIGHT:
+                    second_player.move_r(50, 2)
+                    if duplicate_for_s_pl is not None:
+                        duplicate_for_s_pl.move_r(50, 2)
+
         t = (t + 1) % 4
         if t == 0:
             first_player.update()
             second_player.update()
-        all_sprites.draw(screen)
-        player_group.draw(screen)
-        borders.draw(screen)
+        player1_tiles_group.draw(screen)
+        player1_box_group.draw(screen)
+
+        player2_tiles_group.draw(screen)
+        player2_box_group.draw(screen)
+
+        f_players_group.draw(screen)
+        s_players_group.draw(screen)
+
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
