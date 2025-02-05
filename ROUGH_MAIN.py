@@ -117,12 +117,19 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                 obj = Box('wall', x, y, m_x, m_y)
             elif level[y][x] == '@':
                 obj = Tile('empty', x, y, m_x, m_y)
-                if n_player == 1:
-                    new_player = Player(x, y, m_x, m_y)
-                else:
-                    new_player = Player(x, y, m_x, m_y)
-            elif level[y][x] == '0':
-                Door('open_door', x, y, m_x, m_y)
+                if not (f_players_group and s_players_group):
+                    if n_player == 1:
+                        new_player = Player(x, y, m_x, m_y, 1)
+                    else:
+                        new_player = Player(x, y, m_x, m_y, 2)
+            elif level[y][x] == 'e':
+                obj = Door('east_door', x, y, m_x, m_y)
+            elif level[y][x] == 'w':
+                obj = Door('west_door', x, y, m_x, m_y)
+            elif level[y][x] == 's':
+                obj = Door('south_door', x, y, m_x, m_y)
+            elif level[y][x] == 'n':
+                obj = Door('north_door', x, y, m_x, m_y)
             if isinstance(obj, Box):
                 if n_player == 1:
                     player1_box_group.add(obj)
@@ -143,16 +150,12 @@ class Border(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y, type1):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(door_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
-        self.type = type1
-
-    def type(self):
-        return self.type
-
+        self.type = tile_type
 
 
 class Tile(pygame.sprite.Sprite):
@@ -172,7 +175,7 @@ class Box(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, move_x, move_y):
+    def __init__(self, pos_x, pos_y, move_x, move_y, player):
         super().__init__(all_sprites)
         self.frames = [player_image, player_animation]
         self.cur_image = 0
@@ -181,6 +184,10 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x + 15 + move_x, tile_height * pos_y + 5 + move_y)
         self.m_x = move_x
         self.m_y = move_y
+        if player == 1:
+            self.cur_room = 6
+        else:
+            self.cur_room = 7
 
     def update(self):
         if self.cur_image:
@@ -196,6 +203,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x += m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.x += m // 2
+                if (self.cur_room - 1) % 4:
+                    player1_tiles_group.empty()
+                    player1_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room - 1}.txt'), 1, self.m_x, self.m_y)
+                    self.cur_room -= 1
+                    self.rect.x += (gaming_pole_width - m)
             else:
                 self.rect.x -= m // 2
         else:
@@ -203,6 +218,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x += m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.x += m // 2
+                if (self.cur_room - 1) % 4:
+                    player2_tiles_group.empty()
+                    player2_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room - 1}.txt'), 2, self.m_x, self.m_y)
+                    self.cur_room -= 1
+                    self.rect.x += (gaming_pole_width - m)
             else:
                 self.rect.x -= m // 2
 
@@ -213,11 +236,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x -= m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.x -= m // 2
-                player1_tiles_group.empty()
-                player1_box_group.empty()
-                pygame.draw.rect(screen, pygame.Color('black'),
-                                 (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
-                generate_level(load_level(f'first_level_0_2.txt'), 1, self.m_x, self.m_y)
+                if self.cur_room % 4:
+                    player1_tiles_group.empty()
+                    player1_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room + 1}.txt'), 1, self.m_x, self.m_y)
+                    self.cur_room += 1
+                    self.rect.x -= (gaming_pole_width - m)
             else:
                 self.rect.x += m // 2
 
@@ -226,6 +252,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x -= m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.x -= m // 2
+                if self.cur_room % 4:
+                    player2_tiles_group.empty()
+                    player2_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room + 1}.txt'), 2, self.m_x, self.m_y)
+                    self.cur_room += 1
+                    self.rect.x -= (gaming_pole_width - m)
             else:
                 self.rect.x += m // 2
 
@@ -236,6 +270,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y += m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.y += m // 2
+                if self.cur_room - 4 > 0:
+                    player1_tiles_group.empty()
+                    player1_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room - 4}.txt'), 1, self.m_x, self.m_y)
+                    self.cur_room -= 4
+                    self.rect.y += (gaming_pole_height - m)
             else:
                 self.rect.y -= m // 2
         else:
@@ -243,6 +285,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y += m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.y += m // 2
+                if self.cur_room - 4 > 0:
+                    player2_tiles_group.empty()
+                    player2_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room - 4}.txt'), 2, self.m_x, self.m_y)
+                    self.cur_room -= 4
+                    self.rect.y += (gaming_pole_height - m)
             else:
                 self.rect.y -= m // 2
 
@@ -253,6 +303,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y -= m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.y -= m // 2
+                if self.cur_room + 4 < 13:
+                    player1_tiles_group.empty()
+                    player1_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room + 4}.txt'), 1, self.m_x, self.m_y)
+                    self.cur_room += 4
+                    self.rect.y -= (gaming_pole_height - m)
             else:
                 self.rect.y += m // 2
         else:
@@ -260,6 +318,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y -= m // 2
             elif pygame.sprite.spritecollideany(self, borders):
                 self.rect.y -= m // 2
+                if self.cur_room + 4 < 13:
+                    player2_tiles_group.empty()
+                    player2_box_group.empty()
+                    pygame.draw.rect(screen, pygame.Color('black'),
+                                     (self.m_x, self.m_y, tile_width * tile_count_w, tile_height * tile_count_h))
+                    generate_level(load_level(f'map1.{self.cur_room + 4}.txt'), 2, self.m_x, self.m_y)
+                    self.cur_room += 4
+                    self.rect.y -= (gaming_pole_height - m)
             else:
                 self.rect.y += m // 2
 
@@ -287,7 +353,8 @@ borders = pygame.sprite.Group()
 
 
 def start_game():
-    global width, height, player, player_image, screen, player_animation, tile_images, tile_count_w, tile_count_h
+    global width, height, player, player_image, tile_images, tile_width, tile_height, player_animation, screen
+    global gaming_pole_width, gaming_pole_height
     pygame.init()
 
     size = width, height = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -298,7 +365,10 @@ def start_game():
     tile_images = {
         'wall': load_image('brick.png'),
         'empty': load_image('path.png'),
-        'open_door': load_image('door_opened.png')}
+        'north_door': load_image('door_opened.png'),
+        'east_door': load_image('door_opened_west.png'),
+        'west_door': load_image('door_opened_east.png'),
+        'south_door': load_image('door_opened_south.png')}
     #        'key1': load_image(),
     #        'key2': load_image()}
 
@@ -324,9 +394,9 @@ def start_game():
     Border(right_x, everyone_y, 1, gaming_pole_height + 1)
     Border(right_x + gaming_pole_width, everyone_y, 1, gaming_pole_height + 1)
 
-    first_player = generate_level(load_level('first_level_0_0.txt'), 1,
+    first_player = generate_level(load_level('map1.6.txt'), 1,
                                   left_x + 1, everyone_y + 1)
-    second_player = generate_level(load_level('first_level_0_1.txt'), 2,
+    second_player = generate_level(load_level('map1.7.txt'), 2,
                                    right_x + 1, everyone_y + 1)
 
     f_players_group.add(first_player)
