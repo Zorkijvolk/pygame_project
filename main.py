@@ -64,7 +64,8 @@ class Main(QMainWindow):
     def start(self):
         self.hide()
         start_game()
-        sys.exit()
+
+    #        sys.exit()
 
     def settings(self):
         self.startButton.hide()
@@ -168,13 +169,19 @@ def generate_level(level, n_player, m_x=0, m_y=0):
 
 
 def fpause():
-    font = pygame.font.Font(None, 50)
-    text1 = font.render("Выйти в меню", True, (255, 215, 0))
-    text2 = font.render('Выйти из игры', True, (255, 215, 0))
+    global text_x, text1_y, text2_y
+    font = pygame.font.Font(None, 80)
+    text1 = font.render("Выйти в меню", True, (0, 255, 0))
+    text2 = font.render('Выйти из игры', True, (0, 255, 0))
+    text_x = text2.get_width()
+    text1_y = text1.get_height()
+    text2_y = text2.get_height()
     screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 3))
     screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 3 * 2))
-#    pygame.draw.rect(screen, (0, 255, 0), (width // 2 - text2.get_width() // 2 - 10, text_y - 10,
-#                                           text_w + 20, text_h + 20), 1)
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 * 2 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
 
 
 class Border(pygame.sprite.Sprite):
@@ -375,6 +382,7 @@ class Player(pygame.sprite.Sprite):
 
 width, height, player, player_image, tile_images, screen = None, None, None, None, None, None
 gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y = 0, 0, 0, 0, 0
+text_x, text1_y, text2_y = None, None, None
 tile_width = tile_height = 50
 tile_count_w = 15
 tile_count_h = 15
@@ -458,6 +466,15 @@ def start_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pause:
+                    x, y = pygame.mouse.get_pos()
+                    if width // 2 - text_x // 2 - 10 < x < width // 2 - text_x // 2 - 10 + text_x + 20:
+                        if height // 3 - 10 < y < height // 3 - 10 + text2_y:
+                            running = False
+                            n.showFullScreen()
+                        elif height // 3 * 2 - 10 < y < height // 3 * 2 - 10 + text2_y:
+                            running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
                     running = False
@@ -469,6 +486,7 @@ def start_game():
                     else:
                         pause = True
                         pygame.mouse.set_visible(True)
+
                 if not pause:
                     if event.key == pygame.K_e:
                         first_player.check_doors(1)
@@ -521,12 +539,20 @@ def start_game():
         f_players_group.draw(screen)
         s_players_group.draw(screen)
 
-
         if pause:
             fpause()
+
         pygame.display.flip()
         clock.tick(FPS)
+        if not running:
+            screen.fill('black')
+            f_players_group.empty()
+            s_players_group.empty()
     pygame.quit()
+    if n.isVisible():
+        pass
+    else:
+        sys.exit()
 
 
 if __name__ == '__main__':
