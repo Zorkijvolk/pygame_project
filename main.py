@@ -141,6 +141,16 @@ def generate_level(level, n_player, m_x=0, m_y=0):
     return new_player
 
 
+def fpause():
+    font = pygame.font.Font(None, 50)
+    text1 = font.render("Выйти в меню", True, (255, 215, 0))
+    text2 = font.render('Выйти из игры', True, (255, 215, 0))
+    screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 3))
+    screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 3 * 2))
+#    pygame.draw.rect(screen, (0, 255, 0), (width // 2 - text2.get_width() // 2 - 10, text_y - 10,
+#                                           text_w + 20, text_h + 20), 1)
+
+
 class Border(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__(all_sprites, borders)
@@ -395,51 +405,64 @@ def start_game():
     f_players_group.add(first_player)
     s_players_group.add(second_player)
 
+    pygame.mouse.set_visible(False)
+
     running = True
     t = 0
+    pause = False
 
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
-                    first_player.move_up(50, 1)
-                    if duplicate_for_f_pl is not None:
-                        duplicate_for_f_pl.move_up(50, 1)
-                if event.key == pygame.K_a:
-                    first_player.move_l(50, 1)
-                    if duplicate_for_f_pl is not None:
-                        duplicate_for_f_pl.move_l(50, 1)
-                if event.key == pygame.K_s:
-                    first_player.move_down(50, 1)
-                    if duplicate_for_f_pl is not None:
-                        duplicate_for_f_pl.move_down(50, 1)
-                if event.key == pygame.K_d:
-                    first_player.move_r(50, 1)
-                    if duplicate_for_f_pl is not None:
-                        duplicate_for_f_pl.move_r(50, 1)
-                if event.key == pygame.K_LEFT:
-                    second_player.move_l(50, 2)
-                    if duplicate_for_s_pl is not None:
-                        duplicate_for_s_pl.move_l(50, 2)
-                if event.key == pygame.K_DOWN:
-                    second_player.move_down(50, 2)
-                    if duplicate_for_s_pl is not None:
-                        duplicate_for_s_pl.move_down(50, 2)
-                if event.key == pygame.K_UP:
-                    second_player.move_up(50, 2)
-                    if duplicate_for_s_pl is not None:
-                        duplicate_for_s_pl.move_up(50, 2)
-                if event.key == pygame.K_RIGHT:
-                    second_player.move_r(50, 2)
-                    if duplicate_for_s_pl is not None:
-                        duplicate_for_s_pl.move_r(50, 2)
+                if event.key == pygame.K_ESCAPE:
+                    if pause:
+                        pause = False
+                        pygame.mouse.set_visible(False)
+                        screen.fill('black')
+                    else:
+                        pause = True
+                        pygame.mouse.set_visible(True)
+                if not pause:
+                    if event.key == pygame.K_w:
+                        first_player.move_up(50, 1)
+                        if duplicate_for_f_pl is not None:
+                            duplicate_for_f_pl.move_up(50, 1)
+                    if event.key == pygame.K_a:
+                        first_player.move_l(50, 1)
+                        if duplicate_for_f_pl is not None:
+                            duplicate_for_f_pl.move_l(50, 1)
+                    if event.key == pygame.K_s:
+                        first_player.move_down(50, 1)
+                        if duplicate_for_f_pl is not None:
+                            duplicate_for_f_pl.move_down(50, 1)
+                    if event.key == pygame.K_d:
+                        first_player.move_r(50, 1)
+                        if duplicate_for_f_pl is not None:
+                            duplicate_for_f_pl.move_r(50, 1)
+                    if event.key == pygame.K_LEFT:
+                        second_player.move_l(50, 2)
+                        if duplicate_for_s_pl is not None:
+                            duplicate_for_s_pl.move_l(50, 2)
+                    if event.key == pygame.K_DOWN:
+                        second_player.move_down(50, 2)
+                        if duplicate_for_s_pl is not None:
+                            duplicate_for_s_pl.move_down(50, 2)
+                    if event.key == pygame.K_UP:
+                        second_player.move_up(50, 2)
+                        if duplicate_for_s_pl is not None:
+                            duplicate_for_s_pl.move_up(50, 2)
+                    if event.key == pygame.K_RIGHT:
+                        second_player.move_r(50, 2)
+                        if duplicate_for_s_pl is not None:
+                            duplicate_for_s_pl.move_r(50, 2)
 
-        t = (t + 1) % 4
-        if t == 0:
-            first_player.update()
-            second_player.update()
+        if not pause:
+            t = (t + 1) % 4
+            if t == 0:
+                first_player.update()
+                second_player.update()
         player1_tiles_group.draw(screen)
         player1_box_group.draw(screen)
 
@@ -448,6 +471,8 @@ def start_game():
 
         f_players_group.draw(screen)
         s_players_group.draw(screen)
+        if pause:
+            fpause()
 
         pygame.display.flip()
         clock.tick(FPS)
