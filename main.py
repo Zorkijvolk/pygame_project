@@ -1,6 +1,7 @@
 import os
 import sys
 import pygame
+import datetime as dt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
@@ -548,6 +549,10 @@ def start_game():
             screen.fill('black')
             f_players_group.empty()
             s_players_group.empty()
+            player2_box_group.empty()
+            player1_box_group.empty()
+            player2_tiles_group.empty()
+            player1_tiles_group.empty()
     pygame.quit()
     if n.isVisible():
         pass
