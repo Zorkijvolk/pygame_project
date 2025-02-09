@@ -668,6 +668,9 @@ def start_game():
             if t == 0:
                 first_player.update()
                 second_player.update()
+                if first_player_duplicate is not None:
+                    first_player_duplicate.update()
+                    second_player_duplicate.update()
         player1_tiles_group.draw(screen)
         player1_box_group.draw(screen)
 
@@ -676,6 +679,7 @@ def start_game():
 
         f_players_group.draw(screen)
         s_players_group.draw(screen)
+        duplicate_group.draw(screen)
 
         if pause:
             fpause()
