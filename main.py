@@ -109,7 +109,7 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
-def generate_level(level, n_player, m_x=0, m_y=0):
+def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
     new_player = None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -124,6 +124,13 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                         new_player = Player(x, y, m_x, m_y, 6, 1)
                     else:
                         new_player = Player(x, y, m_x, m_y, 7, 2)
+                elif new_level:
+                    if n_player == 1:
+                        first_player.rect.x = tile_width * x + m_x + 15
+                        first_player.rect.y = tile_height * y + m_y + 5
+                    else:
+                        second_player.rect.x = tile_width * x + m_x + 15
+                        second_player.rect.y = tile_height * y + m_y + 5
             elif level[y][x] == 'K':
                 obj = Tile('empty', x, y, m_x, m_y)
                 if not key1:
@@ -251,6 +258,7 @@ class Player(pygame.sprite.Sprite):
         self.level = 1
         self.cur_room = room
         self.player = player
+        self.key = 0
 
     def update(self):
         if self.cur_image < 2:
@@ -271,6 +279,7 @@ class Player(pygame.sprite.Sprite):
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
+                    key1_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room - 1}.txt'), 1, self.m_x, self.m_y)
                     self.cur_room -= 1
                     self.rect.x += (gaming_pole_width - m)
@@ -299,6 +308,7 @@ class Player(pygame.sprite.Sprite):
                     player2_tiles_group.empty()
                     player2_box_group.empty()
                     door_group_2.empty()
+                    key2_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room - 1}.txt'), 2, self.m_x, self.m_y)
                     self.cur_room -= 1
                     self.rect.x += (gaming_pole_width - m)
@@ -331,6 +341,7 @@ class Player(pygame.sprite.Sprite):
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
+                    key1_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room + 1}.txt'), 1, self.m_x, self.m_y)
                     self.cur_room += 1
                     self.rect.x -= (gaming_pole_width - m)
@@ -360,6 +371,7 @@ class Player(pygame.sprite.Sprite):
                     player2_tiles_group.empty()
                     player2_box_group.empty()
                     door_group_2.empty()
+                    key2_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room + 1}.txt'), 2, self.m_x, self.m_y)
                     self.cur_room += 1
                     self.rect.x -= (gaming_pole_width - m)
@@ -392,6 +404,7 @@ class Player(pygame.sprite.Sprite):
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
+                    key1_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room - 4}.txt'), 1, self.m_x, self.m_y)
                     self.cur_room -= 4
                     self.rect.y += (gaming_pole_height - m)
@@ -420,6 +433,7 @@ class Player(pygame.sprite.Sprite):
                     player2_tiles_group.empty()
                     player2_box_group.empty()
                     door_group_2.empty()
+                    key2_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room - 4}.txt'), 2, self.m_x, self.m_y)
                     self.cur_room -= 4
                     self.rect.y += (gaming_pole_height - m)
@@ -452,6 +466,7 @@ class Player(pygame.sprite.Sprite):
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
+                    key1_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room + 4}.txt'), 1, self.m_x, self.m_y)
                     self.cur_room += 4
                     self.rect.y -= (gaming_pole_height - m)
@@ -480,6 +495,7 @@ class Player(pygame.sprite.Sprite):
                     player2_tiles_group.empty()
                     player2_box_group.empty()
                     door_group_2.empty()
+                    key2_group.empty()
                     generate_level(load_level(f'map{self.level}.{self.cur_room + 4}.txt'), 2, self.m_x, self.m_y)
                     self.cur_room += 4
                     self.rect.y -= (gaming_pole_height - m)
@@ -500,39 +516,21 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.rect.y += m // 2
 
-    def check_doors(self):
-        if self.player == 1 and pygame.sprite.spritecollideany(self, door_group_1):
-            if self.level < 3:
-                self.level += 1
-                pygame.draw.rect(screen, pygame.Color('blue'),
-                                 (left_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
-                f_players_group.empty()
-                player1_tiles_group.empty()
-                player1_box_group.empty()
-                door_group_1.empty()
-        elif self.player == 2 and pygame.sprite.spritecollideany(self, door_group_2):
-            if self.level < 3:
-                self.level += 1
-                pygame.draw.rect(screen, pygame.Color('blue'),
-                                 (right_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
-                s_players_group.empty()
-                player2_tiles_group.empty()
-                player2_box_group.empty()
-                door_group_2.empty()
-
     def interaction(self):
-        global key1, key2
+        global key1, key2, first_player
         if self.player == 1:
             if pygame.sprite.spritecollideany(self, door_group_1) and self.key:
                 if self.level < 3:
                     self.level += 1
-                    pygame.draw.rect(screen, pygame.Color('blue'),
-                                     (left_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
-                    f_players_group.empty()
+
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
                     duplicate_group.empty()
+
+                    self.cur_room = 6
+                    generate_level(load_level(f'map{self.level}.6.txt'), 1, self.m_x, self.m_y, 1)
+
             elif pygame.sprite.spritecollideany(self, key1_group):
                 key1 = 1
                 self.key = 1
@@ -541,12 +539,15 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, door_group_2) and self.key:
                 if self.level < 3:
                     self.level += 1
-                    pygame.draw.rect(screen, pygame.Color('blue'),
-                                     (right_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
-                    s_players_group.empty()
+
                     player2_tiles_group.empty()
                     player2_box_group.empty()
                     door_group_2.empty()
+                    duplicate_group.empty()
+
+                    self.cur_room = 7
+                    generate_level(load_level(f'map{self.level}.7.txt'), 2, self.m_x, self.m_y, 1)
+
             elif pygame.sprite.spritecollideany(self, key2_group):
                 key2 = 1
                 self.key = 1
