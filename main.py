@@ -2,6 +2,9 @@ import os
 import sys
 import pygame
 import datetime as dt
+from pathlib import Path
+from winshell import desktop
+from win32com.client import Dispatch
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
@@ -26,19 +29,19 @@ class Main(QMainWindow):
 
         self.startButton = QPushButton('start', self)
         self.startButton.resize(button_size[0], button_size[1])
-        self.startButton.move((screen_w - button_size[0]) // 2, 550)
+        self.startButton.move((screen_w - button_size[0]) // 2, 350)
         self.startButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
         self.startButton.setFont(font)
 
         self.settingsButton = QPushButton('settings', self)
         self.settingsButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
-        self.settingsButton.move((screen_w - button_size[0]) // 2, 750)
+        self.settingsButton.move((screen_w - button_size[0]) // 2, 550)
         self.settingsButton.resize(button_size[0], button_size[1])
         self.settingsButton.setFont(font)
 
         self.exitButton = QPushButton('exit', self)
         self.exitButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
-        self.exitButton.move((screen_w - button_size[0]) // 2, 950)
+        self.exitButton.move((screen_w - button_size[0]) // 2, 750)
         self.exitButton.resize(button_size[0], button_size[1])
         self.exitButton.setFont(font)
 
@@ -49,10 +52,26 @@ class Main(QMainWindow):
         self.backButton.setFont(font)
         self.backButton.hide()
 
+        self.desktopButton = QPushButton('create a desktop shortcut', self)
+        self.desktopButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
+        self.desktopButton.resize(button_size[0], button_size[1])
+        self.desktopButton.move((screen_w - button_size[0]) // 2, 150)
+        self.desktopButton.setFont(font)
+        self.desktopButton.hide()
+
+        self.resetButton = QPushButton('reset statistics', self)
+        self.resetButton.setStyleSheet('''font-size: 20pt; background-color: blue;''')
+        self.resetButton.resize(button_size[0], button_size[1])
+        self.resetButton.move((screen_w - button_size[0]) // 2, 550)
+        self.resetButton.setFont(font)
+        self.resetButton.hide()
+
         self.startButton.clicked.connect(self.start)
         self.exitButton.clicked.connect(lambda x: self.close())
         self.settingsButton.clicked.connect(self.settings)
         self.backButton.clicked.connect(self.first_page)
+        self.desktopButton.clicked.connect(self.desktop)
+        self.resetButton.clicked.connect(self.reset_statistic)
 
         self.nameProject = QLabel('THE MAZE', self)
         self.nameProject.resize(self.screen().size().width(), 200)
@@ -74,6 +93,8 @@ class Main(QMainWindow):
         self.nameProject.hide()
         self.settingsButton.hide()
         self.backButton.show()
+        self.resetButton.show()
+        self.desktopButton.show()
 
     def first_page(self):
         self.startButton.show()
@@ -81,6 +102,23 @@ class Main(QMainWindow):
         self.nameProject.show()
         self.settingsButton.show()
         self.backButton.hide()
+        self.resetButton.hide()
+        self.desktopButton.hide()
+
+    def desktop(self):
+        t = os.path.abspath('__Main__')[:-8]
+        target = rf"{t}TheMaze.exe"
+        shell = Dispatch('WScript.Shell')
+        shortcut = shell.CreateShortCut(str(Path(desktop()) / "TheMaze.lnk"))
+        shortcut.Targetpath = target
+        shortcut.WorkingDirectory = str(Path(target).parent)
+        shortcut.IconLocation = target
+        shortcut.save()
+
+    def reset_statistic(self):
+        t = open('data/record.txt', 'w', encoding='UTF-8')
+        t.write('0')
+        t.close()
 
 
 def load_image(name, colorkey=None):
