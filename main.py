@@ -124,6 +124,16 @@ def generate_level(level, n_player, m_x=0, m_y=0):
                         new_player = Player(x, y, m_x, m_y, 6, 1)
                     else:
                         new_player = Player(x, y, m_x, m_y, 7, 2)
+            elif level[y][x] == 'K':
+                obj = Tile('empty', x, y, m_x, m_y)
+                if not key1:
+                    k = Key('key1', x, y, m_x, m_y)
+                    key1_group.add(k)
+            elif level[y][x] == 'k':
+                obj = Tile('empty', x, y, m_x, m_y)
+                if not key2:
+                    k = Key('key2', x, y, m_x, m_y)
+                    key2_group.add(k)
             elif level[y][x] == 'n':
                 obj = Door('north_door', x, y, m_x, m_y)
                 door_group_1.add(obj)
@@ -210,6 +220,14 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Box(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
+        super().__init__(all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x + move_x, tile_height * pos_y + move_y)
+
+
+class Key(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(all_sprites)
         self.image = tile_images[tile_type]
@@ -502,11 +520,44 @@ class Player(pygame.sprite.Sprite):
                 player2_box_group.empty()
                 door_group_2.empty()
 
+    def interaction(self):
+        global key1, key2
+        if self.player == 1:
+            if pygame.sprite.spritecollideany(self, door_group_1) and self.key:
+                if self.level < 3:
+                    self.level += 1
+                    pygame.draw.rect(screen, pygame.Color('blue'),
+                                     (left_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
+                    f_players_group.empty()
+                    player1_tiles_group.empty()
+                    player1_box_group.empty()
+                    door_group_1.empty()
+                    duplicate_group.empty()
+            elif pygame.sprite.spritecollideany(self, key1_group):
+                key1 = 1
+                self.key = 1
+                key1_group.empty()
+        elif self.player == 2:
+            if pygame.sprite.spritecollideany(self, door_group_2) and self.key:
+                if self.level < 3:
+                    self.level += 1
+                    pygame.draw.rect(screen, pygame.Color('blue'),
+                                     (right_x, everyone_y, gaming_pole_width + 1, gaming_pole_height + 1))
+                    s_players_group.empty()
+                    player2_tiles_group.empty()
+                    player2_box_group.empty()
+                    door_group_2.empty()
+            elif pygame.sprite.spritecollideany(self, key2_group):
+                key2 = 1
+                self.key = 1
+                key2_group.empty()
+
 
 width, height, player, tile_images, screen = None, None, None, None, None
 gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y = 0, 0, 0, 0, 0
 text_x, text1_y, text2_y = None, None, None
 first_player, second_player = None, None
+key1, key2 = 0, 0
 tile_width = tile_height = 50
 tile_count_w = 15
 tile_count_h = 15
@@ -529,6 +580,9 @@ duplicate_group = pygame.sprite.Group()
 
 door_group_1 = pygame.sprite.Group()
 door_group_2 = pygame.sprite.Group()
+
+key1_group = pygame.sprite.Group()
+key2_group = pygame.sprite.Group()
 
 borders = pygame.sprite.Group()
 
@@ -553,9 +607,9 @@ def start_game():
         'north_door': load_image('door_opened.png'),
         'east_door': load_image('door_opened_west.png'),
         'west_door': load_image('door_opened_east.png'),
-        'south_door': load_image('door_opened_south.png')}
-    #        'key1': load_image(),
-    #        'key2': load_image()}
+        'south_door': load_image('door_opened_south.png'),
+        'key1': load_image('key1.png'),
+        'key2': load_image('key2.png')}
 
     gaming_pole_width = tile_width * tile_count_w
     gaming_pole_height = tile_height * tile_count_h
@@ -620,9 +674,9 @@ def start_game():
 
                 if not pause:
                     if event.key == pygame.K_e:
-                        first_player.check_doors()
+                        first_player.interaction()
                     if event.key == pygame.K_SLASH:
-                        second_player.check_doors()
+                        second_player.interaction()
                     if event.key == pygame.K_w:
                         first_player.move_up(50)
                         if first_player_duplicate is not None and move_duplicate:
@@ -677,6 +731,9 @@ def start_game():
         player2_tiles_group.draw(screen)
         player2_box_group.draw(screen)
 
+        key1_group.draw(screen)
+        key2_group.draw(screen)
+
         f_players_group.draw(screen)
         s_players_group.draw(screen)
         duplicate_group.draw(screen)
@@ -690,10 +747,13 @@ def start_game():
             screen.fill('black')
             f_players_group.empty()
             s_players_group.empty()
-            player2_box_group.empty()
+            player1_tiles_group.empty()
             player1_box_group.empty()
             player2_tiles_group.empty()
-            player1_tiles_group.empty()
+            player2_box_group.empty()
+            duplicate_group.empty()
+            door_group_1.empty()
+            door_group_2.empty()
     pygame.quit()
     if n.isVisible():
         pass
