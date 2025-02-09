@@ -521,12 +521,12 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, door_group_1) and self.key:
                 if self.level < 3:
                     self.level += 1
-
+                    
                     player1_tiles_group.empty()
                     player1_box_group.empty()
                     door_group_1.empty()
                     duplicate_group.empty()
-
+                    
                     self.cur_room = 6
                     generate_level(load_level(f'map{self.level}.6.txt'), 1, self.m_x, self.m_y, 1)
 
