@@ -282,22 +282,6 @@ def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
     return new_player
 
 
-def fpause():
-    global text_x, text1_y, text2_y
-    font = pygame.font.Font(None, 80)
-    text1 = font.render("Выйти в меню", True, (0, 255, 0))
-    text2 = font.render('Выйти из игры', True, (0, 255, 0))
-    text_x = text2.get_width()
-    text1_y = text1.get_height()
-    text2_y = text2.get_height()
-    screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 3))
-    screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 3 * 2))
-    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 - 10,
-                                             text2.get_width() + 20, text2.get_height() + 20), 10)
-    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 * 2 - 10,
-                                             text2.get_width() + 20, text2.get_height() + 20), 10)
-
-
 class Border(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__(all_sprites, borders)
