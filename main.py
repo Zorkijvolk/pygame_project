@@ -785,6 +785,7 @@ time2 = 0
 def end_game():
     global first_player_duplicate, second_player_duplicate
     global text_x, text1_y, text2_y, time1, time2
+    pygame.mouse.set_visible(True)
     f_players_group.empty()
     s_players_group.empty()
     duplicate_group.empty()
@@ -881,9 +882,9 @@ def start_game():
     Border(right_x, everyone_y, 1, gaming_pole_height + 1)
     Border(right_x + gaming_pole_width, everyone_y, 1, gaming_pole_height + 1)
 
-    first_player = generate_level(load_level('map3.6.txt'), 1,
+    first_player = generate_level(load_level('map1.6.txt'), 1,
                                   left_x + 1, everyone_y + 1)
-    second_player = generate_level(load_level('map3.7.txt'), 2,
+    second_player = generate_level(load_level('map1.7.txt'), 2,
                                    right_x + 1, everyone_y + 1)
 
     f_players_group.add(first_player)
@@ -968,7 +969,7 @@ def start_game():
                             second_player_duplicate.move_r(50)
                         second_player.move_r(50)
         if not pause:
-            t = (t + 1) % 4
+            t = (t + 1) % 5
             if t == 0:
                 first_player.update()
                 second_player.update()
