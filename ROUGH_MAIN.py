@@ -4,7 +4,7 @@ import pygame
 import datetime as dt
 from pathlib import Path
 # from winshell import desktop
-# # from win32com.client import Dispatch
+# from win32com.client import Dispatch
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
@@ -148,22 +148,6 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
-def fpause():
-    global text_x, text1_y, text2_y
-    font = pygame.font.Font(None, 80)
-    text1 = font.render("Выйти в меню", True, (0, 255, 0))
-    text2 = font.render('Выйти из игры', True, (0, 255, 0))
-    text_x = text2.get_width()
-    text1_y = text1.get_height()
-    text2_y = text2.get_height()
-    screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 3))
-    screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 3 * 2))
-    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 - 10,
-                                             text2.get_width() + 20, text2.get_height() + 20), 10)
-    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 * 2 - 10,
-                                             text2.get_width() + 20, text2.get_height() + 20), 10)
-
-
 def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
     new_player = None
     for y in range(len(level)):
@@ -214,6 +198,8 @@ def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
                 elif n_player == 2:
                     if not key2:
                         key_interatc_group_2.add(k)
+            elif level[y][x] == 'm':
+                obj = Tile('key1', x, y, m_x, m_y)
             elif level[y][x] == 'n':
                 obj = Door('north_door', x, y, m_x, m_y)
                 if n_player == 1:
@@ -243,28 +229,28 @@ def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
                 else:
                     player2_tiles_group.add(obj)
             elif level[y][x] == '1':
-                obj = Door('north_door', x, y, m_x, m_y)
+                obj = Door('north_door2', x, y, m_x, m_y)
                 if n_player == 2:
                     door_group_2.add(obj)
                     player2_tiles_group.add(obj)
                 else:
                     player1_tiles_group.add(obj)
             elif level[y][x] == '2':
-                obj = Door('south_door', x, y, m_x, m_y)
+                obj = Door('south_door2', x, y, m_x, m_y)
                 if n_player == 2:
                     door_group_2.add(obj)
                     player2_tiles_group.add(obj)
                 else:
                     player1_tiles_group.add(obj)
             elif level[y][x] == '3':
-                obj = Door('west_door', x, y, m_x, m_y)
+                obj = Door('west_door2', x, y, m_x, m_y)
                 if n_player == 2:
                     door_group_2.add(obj)
                     player2_tiles_group.add(obj)
                 else:
                     player1_tiles_group.add(obj)
             elif level[y][x] == '4':
-                obj = Door('east_door', x, y, m_x, m_y)
+                obj = Door('east_door2', x, y, m_x, m_y)
                 if n_player == 2:
                     door_group_2.add(obj)
                     player2_tiles_group.add(obj)
@@ -281,6 +267,22 @@ def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
                 else:
                     player2_tiles_group.add(obj)
     return new_player
+
+
+def fpause():
+    global text_x, text1_y, text2_y
+    font = pygame.font.Font(None, 80)
+    text1 = font.render("Выйти в меню", True, (0, 255, 0))
+    text2 = font.render('Выйти из игры', True, (0, 255, 0))
+    text_x = text2.get_width()
+    text1_y = text1.get_height()
+    text2_y = text2.get_height()
+    screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 3))
+    screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 3 * 2))
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 3 * 2 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
 
 
 class Border(pygame.sprite.Sprite):
@@ -744,7 +746,7 @@ class Player(pygame.sprite.Sprite):
 
 
 width, height, player, tile_images, screen = None, None, None, None, None
-gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y = 0, 0, 0, 0, 0
+gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y, final1, final2 = 0, 0, 0, 0, 0, 0, 0
 text_x, text1_y, text2_y = None, None, None
 first_player, second_player = None, None
 key1, key2 = 0, 0
@@ -755,6 +757,7 @@ player_image_1, player_animation_1 = None, None
 player_image_2, player_animation_2 = None, None
 first_player_duplicate = None
 second_player_duplicate = None
+move_duplicate = 0
 all_sprites = pygame.sprite.Group()
 
 player1_tiles_group = pygame.sprite.Group()
@@ -770,7 +773,6 @@ duplicate_group = pygame.sprite.Group()
 door_group_1 = pygame.sprite.Group()
 door_group_2 = pygame.sprite.Group()
 
-
 key_drawing_group_1 = pygame.sprite.Group()
 key_drawing_group_2 = pygame.sprite.Group()
 key_interatc_group_1 = pygame.sprite.Group()
@@ -778,9 +780,13 @@ key_interatc_group_2 = pygame.sprite.Group()
 
 borders = pygame.sprite.Group()
 
+time1 = dt.datetime.now()
+time2 = 0
 
 def end_game():
     global first_player_duplicate, second_player_duplicate
+    global text_x, text1_y, text2_y, time1, time2
+    pygame.mouse.set_visible(True)
     f_players_group.empty()
     s_players_group.empty()
     duplicate_group.empty()
@@ -790,19 +796,51 @@ def end_game():
     player2_box_group.empty()
     door_group_1.empty()
     door_group_2.empty()
+    if time2:
+        pass
+    else:
+        time2 = dt.datetime.now() - time1
     first_player_duplicate = None
     second_player_duplicate = None
     key_drawing_group_1.empty()
     key_drawing_group_2.empty()
     key_interatc_group_1.empty()
     key_interatc_group_2.empty()
-    screen.fill('blue')
+    screen.fill('black')
+    font = pygame.font.Font(None, 80)
+    text1 = font.render("Выйти в меню", True, (0, 255, 0))
+    text2 = font.render('Выйти из игры', True, (0, 255, 0))
+    text5 = font.render("Выйти в меню", True, (0, 255, 0))
+    f = open('data/record.txt').readline().strip()
+    font = pygame.font.Font(None, 80)
+    if 5000 - time2.seconds > int(f):
+        text4 = font.render(f'NEW RECORD!!!', True, (255, 0, 0))
+        t = open('data/record.txt', 'w')
+        t.write(str(5000 - time2.seconds))
+    else:
+        text4 = font.render(f'Best Score: {f}', True, (255, 0, 0))
+    text3 = font.render(f"score:{5000 - time2.seconds}", True, (255, 0, 0))
+    text5 = font.render("YOU WIN!!!", True, (255, 0, 0))
+    screen.blit(text3, (width // 2 - text3.get_width() // 2, height // 10 * 4))
+    screen.blit(text4, (width // 2 - text4.get_width() // 2, height // 10 * 5))
+    text_x = text2.get_width()
+    text1_y = text1.get_height()
+    text2_y = text2.get_height()
+    screen.blit(text1, (width // 2 - text1.get_width() // 2, height // 10 * 8))
+    screen.blit(text2, (width // 2 - text2.get_width() // 2, height // 10 * 9))
+    screen.blit(text5, (width // 2 - text5.get_width() // 2, height // 10))
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 10 * 8 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
+    pygame.draw.rect(screen, (255, 215, 0), (width // 2 - text2.get_width() // 2 - 10, height // 10 * 9 - 10,
+                                             text2.get_width() + 20, text2.get_height() + 20), 10)
 
 
 def start_game():
     global width, height, player, tile_images, tile_width, tile_height, screen
-    global gaming_pole_width, gaming_pole_height, first_player, second_player
+    global gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y, first_player, second_player
     global player_image_1, player_animation_1, player_image_2, player_animation_2, move_duplicate
+    global final1, final2
+    global text_x, text1_y, text2_y
     pygame.init()
 
     size = width, height = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -817,9 +855,13 @@ def start_game():
         'wall': load_image('brick.png'),
         'empty': load_image('path.png'),
         'north_door': load_image('door_opened.png'),
-        'east_door': load_image('door_opened_west.png'),
-        'west_door': load_image('door_opened_east.png'),
+        'east_door': load_image('door_opened_east.png'),
+        'west_door': load_image('door_opened_west.png'),
         'south_door': load_image('door_opened_south.png'),
+        'north_door2': load_image('door2_opened.png'),
+        'east_door2': load_image('door2_opened_east.png'),
+        'west_door2': load_image('door2_opened_west.png'),
+        'south_door2': load_image('door2_opened_south.png'),
         'key1': load_image('key1.png'),
         'key2': load_image('key2.png')}
 
@@ -855,6 +897,9 @@ def start_game():
 
     pygame.mouse.set_visible(False)
 
+    time1 = dt.datetime.now()
+    time2 = 0
+
     running = True
     t = 0
     pause = False
@@ -871,6 +916,13 @@ def start_game():
                             running = False
                             n.showFullScreen()
                         elif height // 3 * 2 - 10 < y < height // 3 * 2 - 10 + text2_y:
+                            running = False
+                if first_player.staying_in_door and second_player.staying_in_door:
+                    if width // 2 - text_x // 2 - 10 < x < width // 2 - text_x // 2 - 10 + text_x + 20:
+                        if height // 10 * 8 - 10 < y < height // 10 * 8 - 10 + text2_y:
+                            running = False
+                            n.showFullScreen()
+                        elif height // 10 * 9 - 10 < y < height // 10 * 9 - 10 + text2_y:
                             running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
@@ -922,7 +974,7 @@ def start_game():
                             second_player_duplicate.move_r(50)
                         second_player.move_r(50)
         if not pause:
-            t = (t + 1) % 4
+            t = (t + 1) % 5
             if t == 0:
                 first_player.update()
                 second_player.update()
