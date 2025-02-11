@@ -886,16 +886,21 @@ def start_game():
                 time2 = dt.datetime.now() - time1
             f = open('data/record.txt').readline().strip()
             font = pygame.font.Font(None, 80)
+            if 500 - time2.seconds > int(f):
+                text4 = font.render(f'NEW RECORD!!!', True, (255, 0, 0))
+            else:
+                text4 = font.render(f'Best Score: {f}', True, (255, 0, 0))
             text3 = font.render(f"score:{5000 - time2.seconds}", True, (255, 0, 0))
-            text4 = font.render(f'Best Score: {f}', True, (255, 0, 0))
             screen.blit(text3, (width // 2 - text3.get_width() // 2, height // 10))
             screen.blit(text4, (width // 2 - text4.get_width() // 2, height // 10 * 2))
         pygame.display.flip()
         clock.tick(FPS)
         if not running:
-            if final1 and final2:
-                f = open('data/record.txt', 'w')
-                f.write(str(5000 - time2.seconds))
+            t = int(open('data/record.txt').readline().strip())
+                if t < 5000 - time2.seconds:
+                    f = open('data/record.txt', 'w')
+                    f.write(str(5000 - time2.seconds))
+                    f.close()
             screen.fill('black')
             f_players_group.empty()
             s_players_group.empty()
