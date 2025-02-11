@@ -1,0 +1,6 @@
+pygame==2.6.1
+PyQt6==6.8.1
+PyQt6-Qt6==6.8.2
+PyQt6-sip==13.10.0
+pywin32==308
+winshell==0.6
