@@ -3,8 +3,8 @@ import sys
 import pygame
 import datetime as dt
 from pathlib import Path
-from winshell import desktop
-from win32com.client import Dispatch
+# from winshell import desktop
+# # from win32com.client import Dispatch
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
@@ -106,14 +106,15 @@ class Main(QMainWindow):
         self.desktopButton.hide()
 
     def desktop(self):
-        t = os.path.abspath('__Main__')[:-8]
-        target = rf"{t}TheMaze.exe"
-        shell = Dispatch('WScript.Shell')
-        shortcut = shell.CreateShortCut(str(Path(desktop()) / "TheMaze.lnk"))
-        shortcut.Targetpath = target
-        shortcut.WorkingDirectory = str(Path(target).parent)
-        shortcut.IconLocation = target
-        shortcut.save()
+        # t = os.path.abspath('__Main__')[:-8]
+        # target = rf"{t}TheMaze.exe"
+        # shell = Dispatch('WScript.Shell')
+        # shortcut = shell.CreateShortCut(str(Path(desktop()) / "TheMaze.lnk"))
+        # shortcut.Targetpath = target
+        # shortcut.WorkingDirectory = str(Path(target).parent)
+        # shortcut.IconLocation = target
+        # shortcut.save()
+        pass
 
     def reset_statistic(self):
         t = open('data/record.txt', 'w', encoding='UTF-8')
@@ -339,6 +340,7 @@ class Player(pygame.sprite.Sprite):
         self.cur_room = room
         self.player = player
         self.key = 0
+        self.staying_in_door = 0
 
     def update(self):
         if self.cur_image < 2:
@@ -380,6 +382,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.x -= m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_1):
+                    if self != second_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == second_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
         else:
             if pygame.sprite.spritecollideany(self, player2_box_group):
                 self.rect.x += m // 2
@@ -410,6 +420,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.x -= m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_2):
+                    if self != first_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == first_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
 
     def move_r(self, m):
         global first_player_duplicate, second_player_duplicate
@@ -444,6 +462,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.x += m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_1):
+                    if self != second_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == second_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
         else:
             if pygame.sprite.spritecollideany(self, player2_box_group):
                 self.rect.x -= m // 2
@@ -474,6 +500,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.x += m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_2):
+                    if self != first_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == first_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
 
     def move_up(self, m):
         global first_player_duplicate, second_player_duplicate
@@ -508,6 +542,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.y -= m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_1):
+                    if self != second_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == second_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
         else:
             if pygame.sprite.spritecollideany(self, player2_box_group):
                 self.rect.y += m // 2
@@ -538,6 +580,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.y -= m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_2):
+                    if self != first_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == first_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
 
     def move_down(self, m):
         global first_player_duplicate, second_player_duplicate
@@ -572,6 +622,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.y += m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_1):
+                    if self != second_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == second_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
         else:
             if pygame.sprite.spritecollideany(self, player2_box_group):
                 self.rect.y -= m // 2
@@ -602,6 +660,14 @@ class Player(pygame.sprite.Sprite):
                         duplicate_group.empty()
             else:
                 self.rect.y += m // 2
+            if self.level == 3 and self.key:
+                if pygame.sprite.spritecollideany(self, door_group_2):
+                    if self != first_player_duplicate:
+                        self.staying_in_door = 1
+                        if self.staying_in_door == first_player.staying_in_door:
+                            end_game()
+                else:
+                    self.staying_in_door = 0
 
     def interaction(self):
         global key1, key2, first_player_duplicate, second_player_duplicate
@@ -634,7 +700,6 @@ class Player(pygame.sprite.Sprite):
                                                          1)
                         duplicate_group.add(first_player_duplicate)
                         duplicate_group.add(second_player_duplicate)
-
             elif pygame.sprite.spritecollideany(self, key_interatc_group_1):
                 key1 = 1
                 self.key = 1
@@ -670,7 +735,6 @@ class Player(pygame.sprite.Sprite):
                                                          1)
                         duplicate_group.add(first_player_duplicate)
                         duplicate_group.add(second_player_duplicate)
-
             elif pygame.sprite.spritecollideany(self, key_interatc_group_2):
                 key2 = 1
                 self.key = 1
@@ -713,6 +777,26 @@ key_interatc_group_1 = pygame.sprite.Group()
 key_interatc_group_2 = pygame.sprite.Group()
 
 borders = pygame.sprite.Group()
+
+
+def end_game():
+    global first_player_duplicate, second_player_duplicate
+    f_players_group.empty()
+    s_players_group.empty()
+    duplicate_group.empty()
+    player1_tiles_group.empty()
+    player1_box_group.empty()
+    player2_tiles_group.empty()
+    player2_box_group.empty()
+    door_group_1.empty()
+    door_group_2.empty()
+    first_player_duplicate = None
+    second_player_duplicate = None
+    key_drawing_group_1.empty()
+    key_drawing_group_2.empty()
+    key_interatc_group_1.empty()
+    key_interatc_group_2.empty()
+    screen.fill('blue')
 
 
 def start_game():
