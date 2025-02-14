@@ -10,6 +10,7 @@ from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtCore import Qt
 
 
+# класс начального экрана
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -81,10 +82,12 @@ class Main(QMainWindow):
         self.nameProject.setFont(font)
         self.nameProject.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+    # функция, запускающая основной экран
     def start(self):
         self.hide()
         start_game()
 
+    # функция, открывающая настройки
     def settings(self):
         self.startButton.hide()
         self.exitButton.hide()
@@ -94,6 +97,7 @@ class Main(QMainWindow):
         self.resetButton.show()
         self.desktopButton.show()
 
+    # функция, возвращающая начальный экран
     def first_page(self):
         self.startButton.show()
         self.exitButton.show()
@@ -103,6 +107,7 @@ class Main(QMainWindow):
         self.resetButton.hide()
         self.desktopButton.hide()
 
+    # функция, которая создаёт ярлык на рабочий стол.
     def desktop(self):
         t = os.path.abspath('__Main__')[:-8]
         target = rf"{t}TheMaze.exe"
@@ -113,12 +118,14 @@ class Main(QMainWindow):
         shortcut.IconLocation = target
         shortcut.save()
 
+    # функция, которая обнуляет статистику.
     def reset_statistic(self):
         t = open('data/record.txt', 'w', encoding='UTF-8')
         t.write('0')
         t.close()
 
 
+# функция загрузки изображения.
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -135,6 +142,7 @@ def load_image(name, colorkey=None):
     return image
 
 
+# функция загрузки карт.
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
@@ -145,6 +153,7 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
+# функция создания карт.
 def generate_level(level, n_player, m_x=0, m_y=0, new_level=0):
     new_player = None
     for y in range(len(level)):
@@ -282,6 +291,7 @@ def fpause():
                                              text2.get_width() + 20, text2.get_height() + 20), 10)
 
 
+# класс границ экранов.
 class Border(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__(all_sprites, borders)
@@ -289,6 +299,7 @@ class Border(pygame.sprite.Sprite):
         self.image = pygame.Surface([w, h])
 
 
+# класс дверей.
 class Door(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(all_sprites)
@@ -298,6 +309,7 @@ class Door(pygame.sprite.Sprite):
         self.type = tile_type
 
 
+# класс тропинок.
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(all_sprites)
@@ -306,6 +318,7 @@ class Tile(pygame.sprite.Sprite):
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
+# класс стен.
 class Box(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(all_sprites)
@@ -314,6 +327,7 @@ class Box(pygame.sprite.Sprite):
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
+# класс ключей
 class Key(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, move_x, move_y):
         super().__init__(all_sprites)
@@ -322,6 +336,7 @@ class Key(pygame.sprite.Sprite):
             tile_width * pos_x + move_x, tile_height * pos_y + move_y)
 
 
+# класс, реализующий действия игроков
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, move_x, move_y, room, level, player, dupl=0):
         super().__init__(all_sprites)
@@ -782,6 +797,7 @@ time2 = dt.datetime.now()
 delta = dt.timedelta()
 
 
+# Функция, которая запускает финальный экран.
 def end_game():
     global first_player_duplicate, second_player_duplicate
     global text_x, text1_y, text2_y, time1, time2, delta, key1, key2
@@ -834,6 +850,7 @@ def end_game():
                                              text2.get_width() + 20, text2.get_height() + 20), 10)
 
 
+# Функция, которая запускает основной экран.
 def start_game():
     global width, height, player, tile_images, tile_width, tile_height, screen
     global gaming_pole_width, gaming_pole_height, left_x, right_x, everyone_y, first_player, second_player
@@ -1016,9 +1033,9 @@ def start_game():
         sys.exit()
 
 
+# начало программы
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     n = Main()
     n.showFullScreen()
     sys.exit(app.exec())
-    
