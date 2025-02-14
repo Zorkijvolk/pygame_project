@@ -20,7 +20,7 @@ class Main(QMainWindow):
         button_size = (500, 150)
         screen_w, screen_h = self.screen().size().width(), self.screen().size().height()
 
-        self.pixmap = QPixmap('../../Desktop/data/космос.png')
+        self.pixmap = QPixmap('data/космос.png')
         self.pixmap = self.pixmap.scaled(screen_w, screen_h,
                                          aspectRatioMode=Qt.AspectRatioMode.IgnoreAspectRatio)
         self.background = QLabel(self)
@@ -114,13 +114,13 @@ class Main(QMainWindow):
         shortcut.save()
 
     def reset_statistic(self):
-        t = open('../../Desktop/data/record.txt', 'w', encoding='UTF-8')
+        t = open('data/record.txt', 'w', encoding='UTF-8')
         t.write('0')
         t.close()
 
 
 def load_image(name, colorkey=None):
-    fullname = os.path.join('../../Desktop/data', name)
+    fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -777,13 +777,14 @@ key_interatc_group_2 = pygame.sprite.Group()
 
 borders = pygame.sprite.Group()
 
-time1 = dt.datetime.now()
-time2 = 0
+time1 = 0
+time2 = dt.datetime.now()
+delta = dt.timedelta()
 
 
 def end_game():
     global first_player_duplicate, second_player_duplicate
-    global text_x, text1_y, text2_y, time1, time2
+    global text_x, text1_y, text2_y, time1, time2, delta, key1, key2
     pygame.mouse.set_visible(True)
     f_players_group.empty()
     s_players_group.empty()
@@ -794,30 +795,30 @@ def end_game():
     player2_box_group.empty()
     door_group_1.empty()
     door_group_2.empty()
-    if time2:
-        pass
-    else:
-        time2 = dt.datetime.now() - time1
+    time1 = dt.datetime.now()
+    delta = time1 - time2
+    time2 = time1
     first_player_duplicate = None
     second_player_duplicate = None
     key_drawing_group_1.empty()
     key_drawing_group_2.empty()
     key_interatc_group_1.empty()
     key_interatc_group_2.empty()
+    key1 = 0
+    key2 = 0
     screen.fill('black')
     font = pygame.font.Font(None, 80)
     text1 = font.render("Выйти в меню", True, (0, 255, 0))
     text2 = font.render('Выйти из игры', True, (0, 255, 0))
-    text5 = font.render("Выйти в меню", True, (0, 255, 0))
-    f = open('../../Desktop/data/record.txt').readline().strip()
+    f = open('data/record.txt').readline().strip()
     font = pygame.font.Font(None, 80)
-    if 5000 - time2.seconds > int(f):
+    if 5000 - delta.seconds > int(f):
         text4 = font.render(f'NEW RECORD!!!', True, (255, 0, 0))
-        t = open('../../Desktop/data/record.txt', 'w')
-        t.write(str(5000 - time2.seconds))
+        t = open('data/record.txt', 'w')
+        t.write(str(5000 - delta.seconds))
     else:
         text4 = font.render(f'Best Score: {f}', True, (255, 0, 0))
-    text3 = font.render(f"score:{5000 - time2.seconds}", True, (255, 0, 0))
+    text3 = font.render(f"score:{5000 - delta.seconds}", True, (255, 0, 0))
     text5 = font.render("YOU WIN!!!", True, (255, 0, 0))
     screen.blit(text3, (width // 2 - text3.get_width() // 2, height // 10 * 4))
     screen.blit(text4, (width // 2 - text4.get_width() // 2, height // 10 * 5))
@@ -895,9 +896,6 @@ def start_game():
 
     pygame.mouse.set_visible(False)
 
-    time1 = dt.datetime.now()
-    time2 = 0
-
     running = True
     t = 0
     pause = False
@@ -916,6 +914,7 @@ def start_game():
                         elif height // 3 * 2 - 10 < y < height // 3 * 2 - 10 + text2_y:
                             running = False
                 if first_player.staying_in_door and second_player.staying_in_door:
+                    x, y = pygame.mouse.get_pos()
                     if width // 2 - text_x // 2 - 10 < x < width // 2 - text_x // 2 - 10 + text_x + 20:
                         if height // 10 * 8 - 10 < y < height // 10 * 8 - 10 + text2_y:
                             running = False
@@ -1022,3 +1021,4 @@ if __name__ == '__main__':
     n = Main()
     n.showFullScreen()
     sys.exit(app.exec())
+    
